@@ -155,7 +155,7 @@ def get_phonemes(phon):
     phoneme_vowel = VectorMapping.phoneme_vowel
     phoneme_codas = VectorMapping.phoneme_codas
 
-    phon = phon[1:-1]
+    phon = phon.strip('/')
     onset = [0] * len(phoneme_onset)
     vowel = [0] * len(phoneme_vowel)
     codas = [0] * len(phoneme_codas)

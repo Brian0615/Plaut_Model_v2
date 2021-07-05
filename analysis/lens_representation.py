@@ -49,17 +49,20 @@ class LensRepresentation:
         data['hidden'] = data['hidden'].apply(lambda x: [float(i) for i in x.lstrip('output ').split(' ')])
 
         # extract word info (e.g. orth, phon, etc.)
-        word_data = pd.DataFrame(data['word'].apply(lambda x: x.split('_')).tolist(),
-                                 columns=['word_id', 'orth', 'phon', 'word_type', 'type_detail'])
-        word_data['word_type'] = word_data.apply(lambda row: row['word_type'] if row['type_detail'] is None
-                                                 else f"{row['word_type']}_{row['type_detail']}", axis=1)
-        word_data = word_data.drop(columns='type_detail')
+        try:
+            word_data = pd.DataFrame(data['word'].apply(lambda x: x.split('_')).tolist(),
+                                     columns=['word_id', 'orth', 'phon', 'word_type', 'type_detail'])
+            word_data['word_type'] = word_data.apply(lambda row: row['word_type'] if row['type_detail'] is None
+                                                     else f"{row['word_type']}_{row['type_detail']}", axis=1)
+            word_data = word_data.drop(columns='type_detail')
 
-        # merge word info
-        data = data.merge(word_data, left_index=True, right_index=True)
-        data = data.drop(columns=['word'])
+            # merge word info
+            data = data.merge(word_data, left_index=True, right_index=True)
+            data = data.drop(columns=['word'])
+            data['word_id'] = data['word_id'].astype(int)
+        except:
+            pass
         data['epoch'] = data['epoch'].astype(int)
-        data['word_id'] = data['word_id'].astype(int)
 
         # save
         data.to_pickle(filepath.replace('.txt', '.pkl'))
@@ -83,21 +86,24 @@ class LensRepresentation:
         target_data['target'] = target_data['target'].apply(lambda x: [float(i)
                                                                        for i in x.lstrip('target ').split(' ')])
 
-        output_word_data = pd.DataFrame(output_data['word'].apply(lambda x: x.split('_')).tolist(),
-                                        columns=['word_id', 'orth', 'phon', 'word_type', 'type_detail'])
-        target_word_data = pd.DataFrame(target_data['word'].apply(lambda x: x.split('_')).tolist(),
-                                        columns=['word_id', 'orth', 'phon', 'word_type', 'type_detail'])
+        try:
+            output_word_data = pd.DataFrame(output_data['word'].apply(lambda x: x.split('_')).tolist(),
+                                            columns=['word_id', 'orth', 'phon', 'word_type', 'type_detail'])
+            target_word_data = pd.DataFrame(target_data['word'].apply(lambda x: x.split('_')).tolist(),
+                                            columns=['word_id', 'orth', 'phon', 'word_type', 'type_detail'])
 
-        output_data = output_data.merge(output_word_data, left_index=True, right_index=True)
-        target_data = target_data.merge(target_word_data, left_index=True, right_index=True)
+            output_data = output_data.merge(output_word_data, left_index=True, right_index=True)
+            target_data = target_data.merge(target_word_data, left_index=True, right_index=True)
 
-        target_data = target_data.drop(columns=['word', 'orth', 'phon', 'word_type', 'type_detail'])
-        output_data = output_data.merge(target_data, on=['epoch', 'word_id'])
+            target_data = target_data.drop(columns=['word', 'orth', 'phon', 'word_type', 'type_detail'])
+            output_data = output_data.merge(target_data, on=['epoch', 'word_id'])
 
-        output_data['word_type'] = output_data.apply(lambda row: row['word_type'] if row['type_detail'] is None
-                                                     else f"{row['word_type']}_{row['type_detail']}", axis=1)
-        output_data = output_data.drop(columns=['word', 'type_detail'])
+            output_data['word_type'] = output_data.apply(lambda row: row['word_type'] if row['type_detail'] is None
+                                                         else f"{row['word_type']}_{row['type_detail']}", axis=1)
+            output_data = output_data.drop(columns=['word', 'type_detail'])
+            output_data['word_id'] = output_data['word_data'].astype(int)
+        except:
+            pass
         output_data['epoch'] = output_data['epoch'].astype(int)
-        output_data['word_id'] = output_data['word_data'].astype(int)
 
         output_data.to_pickle(filepath.replace('.txt', '.pkl'))
