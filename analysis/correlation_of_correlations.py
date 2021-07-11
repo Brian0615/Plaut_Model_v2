@@ -67,11 +67,15 @@ def calculate_cross_layer_correlation(df):
     return df
 
 
-def generate_correlation_of_correlations_lineplot(data, dilution=None, error_bars=True):
+def generate_correlation_of_correlations_lineplot(data, dilution=None, error_bars=True,
+                                                  hue_order=None, style_order=None):
     """
     Generates the correlation of correlations plot
 
     Args:
+        style_order (list): order for linestyle
+        hue_order (list): order for hue colours
+        error_bars (bool): whether to plot error bars
         data (pd.DataFrame): dataframe containing epoch, correlation, word type
         dilution (int): dilution level
 
@@ -85,9 +89,12 @@ def generate_correlation_of_correlations_lineplot(data, dilution=None, error_bar
     else:
         ci = None
     if dilution is None:
-        sns.lineplot(data=data, x='epoch', y='corr', hue='type', style='corr_type', ci=ci)
+        sns.lineplot(data=data, x='epoch', y='corr', hue='type', style='corr_type', ci=ci,
+                     hue_order=hue_order, style_order=style_order)
     else:
-        sns.lineplot(data=data[data['dilution'] == dilution], x='epoch', y='corr', hue='type', style='corr_type', ci=ci)
+        sns.lineplot(data=data[data['dilution'] == dilution],
+                     x='epoch', y='corr', hue='type', style='corr_type', ci=ci,
+                     hue_order=hue_order, style_order=style_order)
     ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Correlation')
@@ -98,14 +105,15 @@ def generate_correlation_of_correlations_lineplot(data, dilution=None, error_bar
     plt.show()
 
 
-def generate_correlation_of_correlations_barplot(data, epoch, dilution=None, ylim=(0.6, 0.9)):
+def generate_correlation_of_correlations_barplot(data, epoch, dilution=None, ylim=(0.6, 0.9),
+                                                 order=None, hue_order=None):
     fig, ax = plt.subplots(figsize=(6, 5))
     if dilution is None:
         sns.barplot(data=data[data['epoch'] == epoch], ax=ax,
-                    x='corr_type', y="corr", hue='type', errwidth=1, capsize=.1)
+                    x='corr_type', y="corr", hue='type', errwidth=1, capsize=.1, order=order, hue_order=hue_order)
     else:
         sns.barplot(data=data[(data['epoch'] == epoch) & (data['dilution'] == dilution)], ax=ax,
-                    x='corr_type', y="corr", hue='type', errwidth=1, capsize=.1)
+                    x='corr_type', y="corr", hue='type', errwidth=1, capsize=.1, order=order, hue_order=hue_order)
     ax.set_xlabel('Correlation Type')
     ax.set_ylabel('Correlation')
     ax.set_ylim(*ylim)
