@@ -31,16 +31,15 @@ def calculate_correlation_vectors(df):
     """
     accum = []
     for epoch in tqdm(df['epoch'].unique(), total=df['epoch'].nunique()):
-        for dilution in range(1, 4):
+        for dilution in df['dilution'].unique():
             temp = df[(df['epoch'] == epoch) & (df['dilution'] == dilution)].reset_index(drop=True)
             for layer in ['input', 'hidden', 'output', 'target']:
-                corr_df = temp[layer].apply(pd.Series).T.corr()
-                temp[f'{layer}_corr_vector'] = corr_df.values.tolist()
-                # temp[f'{layer}_corr_vector'] = temp.apply(
-                #     lambda row: row[f'{layer}_corr_vector'][:row.name] + row[f'{layer}_corr_vector'][row.name + 1:],
-                #     axis=1)
+                # find correlation matrix and remove correlations of a word with itself (i.e. the diagonal)
+                layer_activations = temp[layer].apply(pd.Series).astype(float)
+                corr_matrix = layer_activations.T.corr().values
+                corr_matrix = corr_matrix[~np.eye(corr_matrix.shape[0], dtype=bool)].reshape(corr_matrix.shape[0], -1)
+                temp[f'{layer}_corr_vector'] = corr_matrix.tolist()
             accum.append(temp)
-
     return pd.concat(accum).reset_index(drop=True)
 
 
@@ -109,10 +108,10 @@ def generate_correlation_of_correlations_barplot(data, epoch, dilution=None, yli
                                                  order=None, hue_order=None):
     fig, ax = plt.subplots(figsize=(6, 5))
     if dilution is None:
-        sns.barplot(data=data[data['epoch'] == epoch], ax=ax,
+        sns.barplot(data=data[data['epoch'] == epoch], ax=ax, ci=68,
                     x='corr_type', y="corr", hue='type', errwidth=1, capsize=.1, order=order, hue_order=hue_order)
     else:
-        sns.barplot(data=data[(data['epoch'] == epoch) & (data['dilution'] == dilution)], ax=ax,
+        sns.barplot(data=data[(data['epoch'] == epoch) & (data['dilution'] == dilution)], ax=ax, ci=68,
                     x='corr_type', y="corr", hue='type', errwidth=1, capsize=.1, order=order, hue_order=hue_order)
     ax.set_xlabel('Correlation Type')
     ax.set_ylabel('Correlation')
