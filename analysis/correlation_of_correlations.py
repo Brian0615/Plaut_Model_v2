@@ -43,6 +43,26 @@ def calculate_correlation_vectors(df):
     return pd.concat(accum).reset_index(drop=True)
 
 
+def calculate_correlation_vectors_new(df, word_sets):
+    accum = []
+    for i, row in tqdm(df.iterrows(), total=len(df)):
+        if row['orth'] not in word_sets.index:
+            continue
+        temp = df[(df['epoch'] == row['epoch']) & (df['dilution'] == row['dilution'])
+                  & (df['orth'].isin(word_sets.loc[row['orth']]['word_set']))]
+        if len(temp) == 0:
+            continue
+
+        temp = pd.concat([row.to_frame().T, temp]).reset_index(drop=True)
+        for layer in ['input', 'hidden', 'output', 'target']:
+            # find correlation matrix and remove correlations of a word with itself (i.e. the diagonal)
+            layer_activations = temp[layer].apply(pd.Series).astype(float)
+            corr_matrix = layer_activations.T.corr().values
+            row[f'{layer}_corr_vector'] = corr_matrix[0][1:]
+        accum.append(row)
+    return pd.concat(accum, axis=1).T.reset_index(drop=True)
+
+
 def calculate_cross_layer_correlation(df):
     """
     Calculates the "correlation of correlations" - i.e. the correlation of two corr_vectors produced by the
